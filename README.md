@@ -1,11 +1,11 @@
 
 # GIT+
 
-Git plus is a hack for Git, it smart for you.
+Git plus is a hack of Git, it smart for you.
 
 ## Feature
 
-* Execute commands post git clone.
+* Execute commands after git clone.
 
 ## Install
 

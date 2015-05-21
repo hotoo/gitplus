@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var yaml = require('js-yaml');
+var cp = require('child_process');
+var spawn = cp.spawn;
+var exec = cp.exec;
+
+function getUserHome() {
+  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
+var CONFIG = yaml.safeLoad(fs.readFileSync(getUserHome() + '/.gitplusrc'));
+
+var GIT_BIN = '/usr/bin/git';
+var RE_GIT_REPO_URL = /^([a-zA-Z0-9._-]+)@([a-zA-Z0-9-.]+):(.*)/;
+
+var args = process.argv.slice(2);
+var isClone = args[0] === 'clone'
+var repoUrl;
+
+function filterUri(args) {
+  if (!Array.isArray(args)) {
+    return [];
+  }
+  return args.filter(function(arg) {
+    // [git-clone](http://git-scm.com/docs/git-clone#URLS)
+    return arg.startsWith('git://') ||
+           arg.startsWith('ssh://') ||
+           RE_GIT_REPO_URL.test(arg) ||
+           arg.startsWith('http://') ||
+           arg.startsWith('https://') ||
+           arg.startsWith('ftp://') ||
+           arg.startsWith('ftps://') ||
+           arg.startsWith('rsync://') ||
+           arg.startsWith('/') ||
+           arg.startsWith('./') ||
+           arg.startsWith('../');
+  });
+}
+
+function parseRepoName(repoUri) {
+  return repoUri.substring(repoUri.lastIndexOf('/') + 1).replace(/\.git$/, '');
+}
+
+// @param argv: clone --depth=1 ./abc.git dir
+function getRepoName (args) {
+  var uris = filterUri(args);
+  var repoUrl = uris[0];
+  var localDir;
+  var repoUrlIndex = args.indexOf(repoUrl);
+  if (repoUrlIndex === args.length - 1) {
+    localDir = parseRepoName(repoUrl);
+  } else {
+    localDir = args[repoUrlIndex + 1];
+  }
+
+  return localDir;
+}
+
+function getRepoUrl (args) {
+  return filterUri(args)[0];
+}
+
+if (isClone) {
+  repoUrl = getRepoUrl(args);
+}
+
+function execute(cmd, args, callback) {
+  var c = spawn(cmd, args);
+  c.stdout.pipe(process.stdout);
+  c.stderr.pipe(process.stderr);
+
+  c.on('exit', function (code, signal) {
+    callback(code, signal);
+  });
+}
+
+function fixedGitBin(cmd) {
+  return cmd
+    .replace(/(^git )/, GIT_BIN + ' ')
+    .replace(/&& *git /g, '&& ' + GIT_BIN + ' ');
+}
+
+execute(GIT_BIN, args, function(code) {
+  if (isClone && code === 0) {
+    var repoPath = getRepoName(args);
+    Object.keys(CONFIG['post-clone']).forEach(function(key) {
+      if (repoUrl.indexOf(key) >= 0) {
+        CONFIG['post-clone'][key].forEach(function(cmd) {
+          exec('cd "' + repoPath + '" && ' + fixedGitBin(cmd));
+        });
+      }
+    })
+  }
+})

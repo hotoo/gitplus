@@ -1,0 +1,28 @@
+{
+  "name": "gitplus",
+  "version": "1.0.0",
+  "description": "execute commands post git clone.",
+  "main": "index.js",
+  "bin": {
+    "gitplus": "./bin/gitplus"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "git",
+    "clone",
+    "post",
+    "config"
+  ],
+  "author": "闲耘 <hotoo.cn@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:hotoo/gitplus.git",
+    "web": "https://github.com/hotoo/gitplus"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "~3.3.1"
+  }
+}

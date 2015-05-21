@@ -67,9 +67,9 @@ if (isClone) {
 }
 
 function execute(cmd, args, callback) {
-  var c = spawn(cmd, args);
-  c.stdout.pipe(process.stdout);
-  c.stderr.pipe(process.stderr);
+  var c = spawn(cmd, args, {
+    stdio: [process.stdin, process.stdout, process.stderr]
+  });
 
   c.on('exit', function (code, signal) {
     callback(code, signal);

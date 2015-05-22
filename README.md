@@ -20,7 +20,7 @@ $ npm install gitplus -g
 ```yaml
 post-clone:
   gitlab.example.com:
-    - git config user.name Lizzie
+    - git config user.name lizzie
     - git config user.email lizzie@example.com
   gitlab.company.com:
     - git config user.name hotoo

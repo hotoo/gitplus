@@ -33,6 +33,8 @@ post-clone:
 alias git='gitplus'
 ```
 
+## Example
+
 ```
 $ git config --global user.email
 hotoo.cn@gmail.com

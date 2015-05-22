@@ -32,3 +32,16 @@ post-clone:
 ```
 alias git='gitplus'
 ```
+
+```
+$ git config --global user.email
+hotoo.cn@gmail.com
+$ git clone git@gitlab.example.com:test/repo.git test
+$ cd test
+$ git config user.email
+lizzie@example.com
+$ git clone git@gitlab.company.com:test/repo.git
+$ cd repo
+$ git config user.email
+hotoo@company.com
+```

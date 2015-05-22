@@ -1,6 +1,6 @@
 {
   "name": "gitplus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "execute commands post git clone.",
   "main": "index.js",
   "bin": {

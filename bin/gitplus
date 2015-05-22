@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+var path = require('path');
 var yaml = require('js-yaml');
 var cp = require('child_process');
 var spawn = cp.spawn;
@@ -10,9 +11,17 @@ function getUserHome() {
   return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 }
 
-var CONFIG = yaml.safeLoad(fs.readFileSync(getUserHome() + '/.gitplusrc'));
+var gitplusrc = path.join(getUserHome(), '/.gitplusrc');
+var CONFIG = fs.existsSync(gitplusrc) ?
+             yaml.safeLoad(fs.readFileSync(gitplusrc)) : {};
 
-var GIT_BIN = '/usr/bin/git';
+var GIT_BIN = CONFIG['git-path'] || '/usr/bin/git';
+
+if (!fs.existsSync(GIT_BIN)) {
+  console.log('command not found:', GIT_BIN, '(PLEASE CHECK ~/.gitplusrc)');
+  process.exit(1)
+}
+
 var RE_GIT_REPO_URL = /^([a-zA-Z0-9._-]+)@([a-zA-Z0-9-.]+):(.*)/;
 
 var args = process.argv.slice(2);

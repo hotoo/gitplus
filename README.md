@@ -18,6 +18,7 @@ $ npm install gitplus -g
 ~/.gitplusrc:
 
 ```yaml
+git-path: /usr/bin/git
 post-clone:
   gitlab.example.com:
     - git config user.name lizzie
@@ -32,6 +33,14 @@ post-clone:
 ```
 alias git='gitplus'
 ```
+
+## Configure
+
+* `git-path`: optional, set you origin git command via absoulte path, default is `/usr/bin/git`.
+* `post-clone`: hooks for execute commands after git clone.
+* `gitlab.example.com` or `gitlab.company.com` is a sample condition for filter git repository.
+* `git config user.name lizzie` is a sample command, this will execute after git clone success and condition matched.
+
 
 ## Example
 

@@ -6,7 +6,7 @@
 [npm-image]: https://img.shields.io/npm/v/gitplus.svg?style=flat
 [npm-url]: https://npmjs.org/package/gitplus
 
-Git plus is a hack of Git, and smart for you.
+Git plus is a hack of Git, smart for you.
 
 ## Feature
 

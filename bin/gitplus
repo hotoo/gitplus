@@ -1,26 +1,13 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-var path = require('path');
-var yaml = require('js-yaml');
-var ini = require('ini');
 var cp = require('child_process');
 var spawn = cp.spawn;
 var exec = cp.exec;
+var util = require('../lib/util');
+var GITCONFIG = util.getGitConfig();
+var CONFIG = util.getGitplusrc();
 
-function getUserHome() {
-  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
-}
-var $HOME = getUserHome();
-
-var gitplusrc = path.join($HOME, '.gitplusrc');
-var CONFIG = fs.existsSync(gitplusrc) ?
-             yaml.safeLoad(fs.readFileSync(gitplusrc)) : {};
-
-var gitconfig = path.join($HOME, '.gitconfig');
-var GITCONFIG = fs.existsSync(gitconfig) ?
-                ini.parse(fs.readFileSync(gitconfig, 'utf-8')) :
-                { alias: {} };
 
 var GIT_BIN = CONFIG['git-path'] || '/usr/bin/git';
 

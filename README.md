@@ -1,11 +1,28 @@
 
 # GIT+
 
-Git plus is a hack of Git, it smart for you.
+Git plus is a hack of Git, and smart for you.
 
 ## Feature
 
-* Execute commands after git clone.
+* Execute commands before `git subcommand` executed, `git commit` for example.
+
+  ```yaml
+  pre-commit:
+    '*':
+      - jshint .
+      - git status
+  ```
+
+* Execute commands after `git subcommand` executed, `git clone` for example.
+
+  ```yaml
+  post-clone:
+    'gitlab.example.com':
+      - git config user.name hotoo
+      - git config user.email hotoo@example.com
+      - git config user.email
+  ```
 
 ## Install
 
@@ -26,6 +43,9 @@ post-clone:
   gitlab.company.com:
     - git config user.name hotoo
     - git config user.email hotoo@company.com
+pre-commit:
+  '*':
+    - jshint .
 ```
 
 ~/.zshrc or ~/.bashrc
@@ -37,9 +57,10 @@ alias git='gitplus'
 ## Configure
 
 * `git-path`: optional, set you origin git command via absoulte path, default is `/usr/bin/git`.
-* `post-clone`: hooks for execute commands after git clone.
-* `gitlab.example.com` or `gitlab.company.com` is a sample condition for filter git repository.
-* `git config user.name lizzie` is a sample command, this will execute after git clone success and condition matched.
+* `pre-subcommand`: hooks for execute commands before `git subcommand`.
+* `post-subcommand`: hooks for execute commands after `git subcommand`.
+* `gitlab.example.com`, `gitlab.company.com` and `*` is a sample condition for filter git repository.
+* `git config user.name lizzie` is a sample command, this will execute after `git subcommand` success and condition matched.
 
 
 ## Example

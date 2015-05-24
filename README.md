@@ -1,12 +1,12 @@
 
-# GIT+
+# git+
 
 [![NPM version][npm-image]][npm-url]
 
 [npm-image]: https://img.shields.io/npm/v/gitplus.svg?style=flat
 [npm-url]: https://npmjs.org/package/gitplus
 
-Git plus is a hack of Git, smart for you.
+git+ is a hack of git, smart for you.
 
 ## Feature
 
@@ -35,7 +35,7 @@ Git plus is a hack of Git, smart for you.
 $ npm install gitplus -g
 ```
 
-## Usage
+## Configure
 
 ~/.gitplusrc:
 
@@ -59,8 +59,6 @@ pre-commit:
 alias git='gitplus'
 ```
 
-## Configure
-
 * `git-path`: optional, set you origin git command via absoulte path, default is `/usr/bin/git`.
 * `pre-subcommand`: hooks for execute commands before `git subcommand`.
 * `post-subcommand`: hooks for execute commands after `git subcommand`.
@@ -68,7 +66,7 @@ alias git='gitplus'
 * `git config user.name lizzie` is a sample command, this will execute after `git subcommand` success and condition matched.
 
 
-## Example
+## Usage
 
 ```
 $ git config --global user.email

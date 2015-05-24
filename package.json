@@ -1,7 +1,7 @@
 {
   "name": "gitplus",
   "version": "1.0.1",
-  "description": "Git+ is a hack of Git, smart for you.",
+  "description": "git+ is a hack of git, smart for you.",
   "main": "index.js",
   "bin": {
     "gitplus": "./bin/gitplus"

@@ -3,6 +3,7 @@
 var fs = require('fs');
 var path = require('path');
 var yaml = require('js-yaml');
+var ini = require('ini');
 var cp = require('child_process');
 var spawn = cp.spawn;
 var exec = cp.exec;
@@ -10,10 +11,16 @@ var exec = cp.exec;
 function getUserHome() {
   return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 }
+var $HOME = getUserHome();
 
-var gitplusrc = path.join(getUserHome(), '/.gitplusrc');
+var gitplusrc = path.join($HOME, '.gitplusrc');
 var CONFIG = fs.existsSync(gitplusrc) ?
              yaml.safeLoad(fs.readFileSync(gitplusrc)) : {};
+
+var gitconfig = path.join($HOME, '.gitconfig');
+var GITCONFIG = fs.existsSync(gitconfig) ?
+                ini.parse(fs.readFileSync(gitconfig, 'utf-8')) :
+                { alias: {} };
 
 var GIT_BIN = CONFIG['git-path'] || '/usr/bin/git';
 
@@ -25,8 +32,16 @@ if (!fs.existsSync(GIT_BIN)) {
 var RE_GIT_REPO_URL = /^([a-zA-Z0-9._-]+)@([a-zA-Z0-9-.]+):(.*)/;
 
 var args = process.argv.slice(2);
-var isClone = args[0] === 'clone'
-var repoUrl;
+var subcommand = args[0];
+
+if (GITCONFIG.alias.hasOwnProperty(subcommand)) {
+  subcommand = GITCONFIG.alias[subcommand].split(/\s/)[0];
+  if (subcommand.startsWith('!')) {
+    subcommand = '';
+  }
+}
+var isGitClone = subcommand === 'clone';
+var repoUrl = '';
 
 function filterUri(args) {
   if (!Array.isArray(args)) {
@@ -43,6 +58,7 @@ function filterUri(args) {
            arg.startsWith('ftps://') ||
            arg.startsWith('rsync://') ||
            arg.startsWith('/') ||
+           arg.startsWith('~/') ||
            arg.startsWith('./') ||
            arg.startsWith('../');
   });
@@ -71,8 +87,18 @@ function getRepoUrl (args) {
   return filterUri(args)[0];
 }
 
-if (isClone) {
+if (isGitClone) {
   repoUrl = getRepoUrl(args);
+} else {
+  try {
+    repoUrl = cp.execSync('git remote -v')
+                .toString()
+                .split(/\r\n|\r|\n/)
+                .filter(function(commandLine) {
+                  return /^origin\s.*\(push\)$/.test(commandLine)
+                });
+    repoUrl = repoUrl.length ? repoUrl[0].split(/[\s]/)[1] : '';
+  } catch (ex) { }
 }
 
 function execute(cmd, args, callback) {
@@ -91,15 +117,59 @@ function fixedGitBin(cmd) {
     .replace(/&& *git /g, '&& ' + GIT_BIN + ' ');
 }
 
-execute(GIT_BIN, args, function(code) {
-  if (isClone && code === 0) {
-    var repoPath = getRepoName(args);
-    Object.keys(CONFIG['post-clone']).forEach(function(key) {
-      if (repoUrl.indexOf(key) >= 0) {
-        CONFIG['post-clone'][key].forEach(function(cmd) {
-          exec('cd "' + repoPath + '" && ' + fixedGitBin(cmd));
-        });
-      }
-    })
+function executeQueues (commands) {
+  var command = commands.shift();
+  exec(command, {
+    stdio: [process.stdin, process.stdout, process.stderr]
+  }, function(err, stdout, stderr){
+    if (err) {
+      process.stderr.write(stderr);
+      return;
+    }
+    process.stdout.write(stdout);
+
+    if (commands.length) {
+      executeQueues(commands);
+    }
+  });
+}
+
+function getExtendCommands (hookName) {
+  var commands = [];
+  if (!subcommand) {return commands;}
+  if (!CONFIG.hasOwnProperty(hookName) || !CONFIG[hookName]) {
+    return commands;
   }
+
+  Object.keys(CONFIG[hookName]).forEach(function(condition) {
+    if (condition === '*' || repoUrl.indexOf(condition) >= 0) {
+      var cmds = CONFIG[hookName][condition];
+      commands.push.apply(commands, cmds);
+    }
+  });
+  return commands;
+}
+
+var preCommands = getExtendCommands('pre-' + subcommand);
+if (preCommands.length) {
+  executeQueues(preCommands.map(function(command) {
+    return fixedGitBin(command);
+  }));
+}
+
+function executePostCommands () {
+  var repoPath = getRepoName(args);
+  var postCommands = getExtendCommands('post-' + subcommand);
+  if (!postCommands.length) {return;}
+
+  executeQueues(postCommands.map(function(command) {
+    return (isGitClone ? 'cd "' + repoPath + '" && ' : '') + fixedGitBin(command);
+  }));
+}
+
+execute(GIT_BIN, args, function(code) {
+  if (code !== 0) {return;}
+
+  executePostCommands();
+
 })

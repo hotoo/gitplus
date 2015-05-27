@@ -76,6 +76,8 @@ function getRepoUrl (args) {
 
 if (isGitClone) {
   repoUrl = getRepoUrl(args);
+} else if (subcommand === 'init') {
+  repoUrl = '';
 } else {
   try {
     repoUrl = cp.execSync('git remote -v')

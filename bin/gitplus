@@ -106,7 +106,12 @@ function fixedGitBin(cmd) {
     .replace(/&& *git /g, '&& ' + GIT_BIN + ' ');
 }
 
-function executeQueues (commands) {
+function executeQueues (commands, callback) {
+
+  if (!commands.length) {
+    return callback && callback();
+  }
+
   var command = commands.shift();
   exec(command, {
     stdio: [process.stdin, process.stdout, process.stderr]
@@ -117,9 +122,7 @@ function executeQueues (commands) {
     }
     process.stdout.write(stdout);
 
-    if (commands.length) {
-      executeQueues(commands);
-    }
+    executeQueues(commands, callback);
   });
 }
 
@@ -140,11 +143,16 @@ function getExtendCommands (hookName) {
 }
 
 var preCommands = getExtendCommands('pre-' + subcommand);
-if (preCommands.length) {
-  executeQueues(preCommands.map(function(command) {
-    return fixedGitBin(command);
-  }));
-}
+executeQueues(preCommands.map(function(command) {
+  return fixedGitBin(command);
+}), function () {
+
+  execute(GIT_BIN, args, function(code) {
+    if (code !== 0) {return;}
+    executePostCommands();
+  });
+
+});
 
 function executePostCommands () {
   var repoPath = getRepoName(args);
@@ -155,10 +163,3 @@ function executePostCommands () {
     return (isGitClone ? 'cd "' + repoPath + '" && ' : '') + fixedGitBin(command);
   }));
 }
-
-execute(GIT_BIN, args, function(code) {
-  if (code !== 0) {return;}
-
-  executePostCommands();
-
-})

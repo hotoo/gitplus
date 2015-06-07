@@ -108,22 +108,19 @@ function fixedGitBin(cmd) {
 
 function executeQueues (commands, callback) {
 
-  if (!commands.length) {
-    return callback && callback();
-  }
-
-  var command = commands.shift();
-  exec(command, {
-    stdio: [process.stdin, process.stdout, process.stderr]
-  }, function(err, stdout, stderr){
-    if (err) {
-      process.stderr.write(stderr);
-      return;
+  var executeFailed = commands.some(function(command) {
+    try {
+      cp.execSync(command, {
+        stdio: [process.stdin, process.stdout, process.stderr]
+      });
+    } catch (ex) {
+      return true;
     }
-    process.stdout.write(stdout);
-
-    executeQueues(commands, callback);
   });
+
+  if (!executeFailed && callback) {
+    return callback();
+  }
 }
 
 function getExtendCommands (hookName) {

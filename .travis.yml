@@ -1,0 +1,9 @@
+os:
+  - linux
+  - osx
+language: node_js
+
+node_js:
+  - "0.12"
+  - "iojs-1"
+  - "iojs-2"
